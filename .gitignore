@@ -27,3 +27,10 @@ setup.log
 
 # Local OPAM switch
 _opam/
+
+# Our additions : 
+# No VSCode Files
+*.vscode
+
+# And no macshit in that project
+*.DS_Store
