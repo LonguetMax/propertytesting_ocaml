@@ -89,31 +89,33 @@ module Reduction :
     let empty = fun _ -> []
     
     (* TYPES DE BASE *)
-
-    let int n = 
-      let abs_n = abs n in
-      let neg_ints = List.init abs_n (fun i -> -i) |> List.rev in
-      let pos_ints = List.init (abs_n + 1) (fun i -> i) in
-      List.filter (fun x -> x <> n) (neg_ints @ pos_ints)
-    
+    (* int *)
+    let int n = List.init (abs n * 2 + 1) (fun i -> i - abs n)    
     let int_nonneg n = 
       List.init (n + 1) (fun i -> i)
 
-    let float x = 
-      if x = 0.0 then []
-      else if x < 0.0 then [x; 0.0; -1.0 *. x]
-      else [x; 0.0; -1.0 *. x]
-    
-    let float_nonneg x = 
-      if x = 0.0 then []
-      else [x; 0.0]
+    (* float *)
+    let float x =
+      let open Float in
+      let x = abs x in
+      let step_size = x /. 4. in
+      List.init 9 (fun i -> (float_of_int (i - 4)) *. step_size)
 
+    let float_nonneg x =
+      let open Float in
+      let step_size = x /. 8. in
+      List.init 9 (fun i -> (float_of_int i) *. step_size)
+
+    (* char *)
     let char c =
       let code = int_of_char c in
-      let min_code = max 0 (code - 10) in
-      let max_code = min 255 (code + 10) in
+      let min_code = 0 in
+      let max_code = min 255 code in
       List.map char_of_int (List.init (max_code - min_code + 1) (fun i -> i + min_code))
-    
+    (*
+    let alphanum c =
+      List.filter (() || () || ()) char c
+*)
     let alphanum c =
       if c >= '0' && c <= '9' then
         let n = int_of_char c - int_of_char '0' in
@@ -128,7 +130,6 @@ module Reduction :
         [c]
 
     (* CHAINES DE CARACTERES *)
-
     let string red s =
       let reduce_char c = List.map (fun c' -> String.make 1 c') (red c) in
       let rec reduce_string i =
@@ -142,7 +143,6 @@ module Reduction :
     
 
     (* LISTES *)
-
     let list red l =
       let rec aux acc = function
         | [] -> [List.rev acc]
@@ -150,29 +150,10 @@ module Reduction :
       in aux [] l
 
     (* TRANSFORMATIONS *)
-(*
-    let combine fst_red snd_red =
-      fun x ->
-        let fst_lst = fst_red x in
-        let snd_lst = snd_red x in
-        let rec loop acc fst_lst snd_lst =
-          match fst_lst, snd_lst with
-          | [], _ | _, [] -> List.rev acc
-          | (f, f')::tl_f, (s, s')::tl_s ->
-              loop ((f, s)::acc) (f' @ fst_red s) (s' @ snd_red f) tl_f tl_s
-        in loop [] fst_lst snd_lst
-*)
     let combine fst_red snd_red =
       fun (x, y) ->
         List.concat
           (List.map (fun x' -> List.map (fun y' -> (x', y')) (snd_red y)) (fst_red x))
 
-(* TODO : fonction filter, tests des autres fonctions, tests avec 'examples.ml'
-    let filter p red =
-      fun x ->
-        let rec loop lst = match red lst with
-          | [] -> []
-          | (v, lst') :: tl -> if p v then (v, lst') :: loop tl else loop tl
-        in loop x
-*)
+    let filter p red = fun x -> List.filter p (red x)
   end ;;
