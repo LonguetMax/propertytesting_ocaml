@@ -130,16 +130,16 @@ module Reduction :
         [c]
 
     (* CHAINES DE CARACTERES *)
-    let string red s =
-      let reduce_char c = List.map (fun c' -> String.make 1 c') (red c) in
-      let rec reduce_string i =
-        if i >= String.length s then
-          [s]
-        else
-          let reduced_chars = reduce_char s.[i] in
-          List.concat (List.map (fun c -> List.map (fun s' -> String.sub s 0 i ^ s' ^ String.sub s (i + 1) (String.length s - i - 1)) (reduce_string (i+1))) reduced_chars)
-      in
-      reduce_string 0
+
+    let red c =
+      match c with
+      | 'a' | 'e' | 'i' | 'o' | 'u' | 'y' -> ['*']
+      | _ -> [c]
+
+      let rec string red s =
+        match s with
+        | "" -> [""]
+        | c::cs -> List.concat (List.map red c) @ List.map (fun x -> String.make 1 x) cs |> List.map (fun x -> x :: string red cs) |> List.concat
     
 
     (* LISTES *)
