@@ -112,24 +112,19 @@ module Reduction :
       let min_code = 0 in
       let max_code = min 255 code in
       List.map char_of_int (List.init (max_code - min_code + 1) (fun i -> i + min_code))
-    (*
+
     let alphanum c =
-      List.filter (() || () || ()) char c
-*)
-    let alphanum c =
-      if c >= '0' && c <= '9' then
-        let n = int_of_char c - int_of_char '0' in
-        if n = 0 then ['0'] else List.init n (fun i -> char_of_int (int_of_char '0' + i))
-      else if c >= 'A' && c <= 'Z' then
-        let n = int_of_char c - int_of_char 'A' + 1 in
-        List.init n (fun i -> char_of_int (int_of_char 'A' + i - 1))
-      else if c >= 'a' && c <= 'z' then
-        let n = int_of_char c - int_of_char 'a' + 1 in
-        List.init n (fun i -> char_of_int (int_of_char 'a' + i - 1))
-      else
-        [c]
+      let is_alphanum c =
+        let code = int_of_char c in
+        (code >= 48 && code <= 57) || (code >= 65 && code <= 90) || (code >= 97 && code <= 122)
+      in
+      let code = int_of_char c in
+      let min_code = 0 in
+      let max_code = min 255 code in
+      List.filter is_alphanum (List.map char_of_int (List.init (max_code - min_code + 1) (fun i -> i + min_code)))
 
     (* CHAINES DE CARACTERES *)
+    (*
     let string red s =
       let reduce_char c = List.map (fun c' -> String.make 1 c') (red c) in
       let rec reduce_string i =
@@ -140,7 +135,17 @@ module Reduction :
           List.concat (List.map (fun c -> List.map (fun s' -> String.sub s 0 i ^ s' ^ String.sub s (i + 1) (String.length s - i - 1)) (reduce_string (i+1))) reduced_chars)
       in
       reduce_string 0
-    
+    *)
+    (*
+    let string red s =
+      let rec loop i acc =
+        if i < String.length s then
+          loop (i + 1) (acc @ [red (String.get s i)])
+        else
+          acc
+      in
+      loop 0 []
+    *)
 
     (* LISTES *)
     let list red l =
