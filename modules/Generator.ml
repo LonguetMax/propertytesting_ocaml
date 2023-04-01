@@ -106,5 +106,76 @@ module Generator :
     val partitioned_map : ('a -> bool) -> (('a -> 'b) * ('a -> 'b)) -> 'a t -> 'b t
   end =
   struct
-    (* TODO : Implémenter le type et tous les éléments de la signature *)
+    type 'a t = unit -> 'a
+
+  let next gen = gen ()
+
+  let const x = fun () -> x
+
+  let bool prob = fun () -> Random.float 1.0 < prob
+
+  let int a b = fun () -> Random.int (b - a + 1) + a
+
+  let int_nonneg n = int 0 n
+
+  let float x y = fun () -> Random.float (y -. x) +. x
+
+  let float_nonneg x = float 0.0 x
+
+  let char = fun () -> Char.chr (Random.int 256)
+
+  (* Creating a function that returns a random character from the string `chars`. *)
+  let alphanum = fun () ->
+    let chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" in
+    let n = String.length chars in
+    chars.[Random.int n]
+
+  (* Creating a string of length n using the generator gen. *)
+  let string n gen =
+    fun () ->
+      let buf = Buffer.create n in
+      for _i = 1 to n do
+        Buffer.add_char buf (next gen)
+      done;
+      Buffer.contents buf
+
+  (* Creating a list of length n using the generator gen. *)
+  let list n gen =
+    fun () ->
+      let rec loop acc = function
+        | 0 -> acc
+        | k -> loop (next gen :: acc) (k - 1)
+      in
+      loop [] n
+
+(* Creating a generator that returns a tuple of the next values of gen1 and gen2. *)
+  let combine gen1 gen2 = fun () -> (next gen1, next gen2)
+
+(* Creating a function that takes a generator and a function and returns a new generator. The new generator will apply the function to the next value of the generator. *)
+  let map f gen = fun () -> f (next gen)
+
+  (* Creating a function that takes a generator and a function and returns a new generator. The new generator will apply the function to the next value of the generator. *)
+  let filter p gen =
+    let rec loop () =
+      let x = next gen in
+      if p x then x else loop ()
+    in
+    loop
+
+  (* A function that takes a generator and a function and returns a new generator. The new generator will apply the function to the next value of the generator. *)
+  let filter_map f gen =
+    let rec loop () =
+      match f (next gen) with
+      | Some x -> x
+      | None -> loop ()
+    in
+    loop
+
+  (* A function that takes a generator and a function and returns a new generator. The new generator will apply the function to the next value of the generator. *)
+  let partitioned_map p (f1, f2) gen =
+    let rec loop () =
+      let x = next gen in
+      if p x then f1 x else f2 x
+    in
+    loop
   end ;;

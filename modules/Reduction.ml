@@ -43,6 +43,8 @@ module Reduction :
       *)
     val char : char t
 
+    val alpha : char t
+
     (** Stratégie de réduction sur les caractères alphanumériques
       * @param c caractère alphanumérique
       * @return  liste de caractères alphanumériques plus "simples"
@@ -123,29 +125,45 @@ module Reduction :
       let max_code = min 255 code in
       List.filter is_alphanum (List.map char_of_int (List.init (max_code - min_code + 1) (fun i -> i + min_code)))
 
+    let alpha c =
+      let code = int_of_char (Char.lowercase_ascii c) in
+      if (code < 97 || code > 122) then
+          []
+      else
+        let min_code = 97 in
+        let max_code = min 122 code in
+        List.map char_of_int (List.init (max_code - min_code + 1) (fun i -> i + min_code))
+
     (* CHAINES DE CARACTERES *)
+    (* Version simple :*)
     (*
+    let rec all_combinations acc = function
+    | [] -> acc
+    | hd::tl ->
+        let new_acc = List.concat_map (fun x -> List.map (fun y -> x::y) acc) hd in
+        all_combinations new_acc tl
+
     let string red s =
-      let reduce_char c = List.map (fun c' -> String.make 1 c') (red c) in
-      let rec reduce_string i =
-        if i >= String.length s then
-          [s]
-        else
-          let reduced_chars = reduce_char s.[i] in
-          List.concat (List.map (fun c -> List.map (fun s' -> String.sub s 0 i ^ s' ^ String.sub s (i + 1) (String.length s - i - 1)) (reduce_string (i+1))) reduced_chars)
+      let rec string_helper acc = function
+        | [] -> all_combinations [[]] (List.rev acc)
+        | c :: tl -> string_helper ((red c) :: acc) tl
       in
-      reduce_string 0
+      List.map (fun l -> List.fold_left (fun acc c -> acc ^ (String.make 1 c)) "" (List.rev l)) (string_helper [] (String.to_seq s |> List.of_seq))
     *)
-    (*
+    let rec all_combinations acc = function
+    | [] -> acc
+    | hd::tl ->
+        let new_acc = List.concat_map (fun x -> List.map (fun y -> x::y) acc) hd in
+        let sub_combinations, longer_strings = List.partition (fun l -> List.length l <= 2) new_acc in
+        all_combinations (sub_combinations @ longer_strings @ acc) tl
+  
     let string red s =
-      let rec loop i acc =
-        if i < String.length s then
-          loop (i + 1) (acc @ [red (String.get s i)])
-        else
-          acc
+      let rec string_helper acc = function
+        | [] -> all_combinations [[]] (List.rev acc)
+        | c :: tl -> string_helper ((red c) :: acc) tl
       in
-      loop 0 []
-    *)
+      let result = List.map (fun l -> List.fold_left (fun acc c -> acc ^ (String.make 1 c)) "" (List.rev l)) (string_helper [] (String.to_seq s |> List.of_seq)) in
+      List.sort_uniq compare result |> List.sort (fun s1 s2 -> compare (String.length s1) (String.length s2))
 
     (* LISTES *)
     let list red l =
@@ -161,4 +179,11 @@ module Reduction :
           (List.map (fun x' -> List.map (fun y' -> (x', y')) (snd_red y)) (fst_red x))
 
     let filter p red = fun x -> List.filter p (red x)
+
+
+      
+
+  
+
+
   end ;;
