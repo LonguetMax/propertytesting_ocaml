@@ -1,2 +1,3 @@
 # propertytesting_ocaml
-A school project about property-testing in OCaML.
+
+Projet de property-testing créé en OCaML.
