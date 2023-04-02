@@ -29,6 +29,13 @@ module Test :
       *)
     val fails_at : int -> 'a t -> 'a option
 
+    (** Cherche une valeur simple ne vérifiant pas la propriété
+      * @param n nombre de valeurs à tester
+      * @return  `None` si toutes les valeurs de test générées par `gen` vérifient `prop`,
+                 une valeur ne vérifiant pas `prop` (éventuellement en appliquant `red`) sinon
+      *)
+    val reduced_fails_at : int -> 'a t -> ('a * 'a list option) list
+
     (** Exécute plusieurs tests
       * @param n     nombre de valeurs testées par test
       * @param tests liste des tests à vérifier

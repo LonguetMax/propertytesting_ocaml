@@ -43,13 +43,17 @@ module Reduction :
       *)
     val char : char t
 
-    val alpha : char t
-
     (** Stratégie de réduction sur les caractères alphanumériques
       * @param c caractère alphanumérique
       * @return  liste de caractères alphanumériques plus "simples"
       *)
     val alphanum : char t
+
+    (** Stratégie de réduction sur les letres de l'alphabet
+      * @param c caractère
+      * @return  liste des lettres plus "simples" et passées en lowercase
+      *)
+    val alpha : char t
 
     (* CHAINES DE CARACTERES *)
 
