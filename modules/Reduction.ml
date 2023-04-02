@@ -150,27 +150,39 @@ module Reduction :
       in
       List.map (fun l -> List.fold_left (fun acc c -> acc ^ (String.make 1 c)) "" (List.rev l)) (string_helper [] (String.to_seq s |> List.of_seq))
     *)
-    let rec all_combinations acc = function
+    let rec string_all_combinations acc = function
     | [] -> acc
     | hd::tl ->
         let new_acc = List.concat_map (fun x -> List.map (fun y -> x::y) acc) hd in
         let sub_combinations, longer_strings = List.partition (fun l -> List.length l <= 2) new_acc in
-        all_combinations (sub_combinations @ longer_strings @ acc) tl
+        string_all_combinations (sub_combinations @ longer_strings @ acc) tl
   
     let string red s =
       let rec string_helper acc = function
-        | [] -> all_combinations [[]] (List.rev acc)
+        | [] -> string_all_combinations [[]] (List.rev acc)
         | c :: tl -> string_helper ((red c) :: acc) tl
       in
       let result = List.map (fun l -> List.fold_left (fun acc c -> acc ^ (String.make 1 c)) "" (List.rev l)) (string_helper [] (String.to_seq s |> List.of_seq)) in
       List.sort_uniq compare result |> List.sort (fun s1 s2 -> compare (String.length s1) (String.length s2))
 
     (* LISTES *)
+    let rec list_all_combinations acc = function
+    | [] -> acc
+    | hd::tl ->
+        let new_acc = List.concat_map (fun x -> List.map (fun y -> x::y) acc) hd in
+        let sub_combinations, longer_lists = List.partition (fun l -> List.length l <= 2) new_acc in
+        list_all_combinations (sub_combinations @ longer_lists @ acc) tl
+    
     let list red l =
-      let rec aux acc = function
-        | [] -> [List.rev acc]
-        | x::xs -> List.concat (List.map (fun y -> aux (y::acc) xs) (red x))
-      in aux [] l
+      let rec list_helper acc = function
+        | [] -> list_all_combinations [[]] (List.rev acc)
+        | hd :: tl -> 
+            let reduced_hd = red hd in
+            list_helper (reduced_hd :: acc) tl
+      in
+      let result = List.map List.rev (list_helper [] l) in
+      List.sort_uniq compare result |> List.sort (fun l1 l2 -> compare (List.length l1) (List.length l2))
+  
 
     (* TRANSFORMATIONS *)
     let combine fst_red snd_red =
