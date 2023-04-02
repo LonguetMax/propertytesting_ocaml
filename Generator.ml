@@ -131,22 +131,28 @@ module Generator :
     chars.[Random.int n]
 
   (* Creating a string of length n using the generator gen. *)
+  (* ICI CHANGER LA FONCTION STRING *)
+  
   let string n gen =
-    fun () ->
-      let buf = Buffer.create n in
-      for _i = 1 to n do
-        Buffer.add_char buf (next gen)
-      done;
-      Buffer.contents buf
+  let rec aux i acc =
+    if i = 0 then acc
+    else
+      let c = next gen in
+      aux (i-1) (String.make 1 c ^ acc)
+  in
+  fun () -> aux (Random.int (n+1)) ""
 
   (* Creating a list of length n using the generator gen. *)
+
   let list n gen =
-    fun () ->
-      let rec loop acc = function
-        | 0 -> acc
-        | k -> loop (next gen :: acc) (k - 1)
-      in
-      loop [] n
+  let rec next_n_elements n acc g =
+    if n = 0 then List.rev acc
+    else let x = next g in
+      next_n_elements (n - 1) (x :: acc) g
+    in
+  let lst = next_n_elements n [] gen in
+  (fun () -> lst)
+
 
 (* Creating a generator that returns a tuple of the next values of gen1 and gen2. *)
   let combine gen1 gen2 = fun () -> (next gen1, next gen2)
@@ -156,26 +162,18 @@ module Generator :
 
   (* Creating a function that takes a generator and a function and returns a new generator. The new generator will apply the function to the next value of the generator. *)
   let filter p gen =
-    let rec loop () =
-      let x = next gen in
-      if p x then x else loop ()
-    in
-    loop
+  let rec next_filtered g =
+    let x = next g in
+    if p x then x else next_filtered g
+  in
+  (fun () -> next_filtered gen)
 
-  (* A function that takes a generator and a function and returns a new generator. The new generator will apply the function to the next value of the generator. *)
-  let filter_map f gen =
-    let rec loop () =
-      match f (next gen) with
-      | Some x -> x
-      | None -> loop ()
-    in
-    loop
 
   (* A function that takes a generator and a function and returns a new generator. The new generator will apply the function to the next value of the generator. *)
   let partitioned_map p (f1, f2) gen =
-    let rec loop () =
-      let x = next gen in
-      if p x then f1 x else f2 x
-    in
-    loop
-  end ;;
+  let next_pm () =
+    let x = next gen in
+    if p x then f1 x else f2 x
+  in
+  (fun () -> next_pm ())
+end
