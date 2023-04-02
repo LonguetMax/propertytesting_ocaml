@@ -37,7 +37,6 @@ module Test :
     val execute : int -> ('a t) list -> ('a t * 'a option) list
   end =
   struct
-    (* TODO : Implémenter le type et tous les éléments de la signature *)
     type 'a t = {
       gen: 'a Generator.t;
       red: 'a Reduction.t;
@@ -50,25 +49,28 @@ module Test :
       prop = prop;
     }
 
-    let check n test =
-      let rec loop i =
-        if i = n then true
-        else
-          let x = Generator.generate test.gen in
-          Property.check test.prop x && loop (i + 1)
-      in n > 0 && loop 0
+    let rec check n test =
+      match n with
+      | m when m > 1 -> test.prop (Generator.next test.gen) && (check (n-1) test)
+      | 1 -> test.prop (Generator.next test.gen)
+      | _ -> false
 
-    let fails_at n test =
-      let rec loop i =
-        if i = n then None
+    let rec fails_at n test =
+        match n with
+        | m when m > 0 -> let value = Generator.next test.gen in if test.prop value then fails_at (n-1) test else Some(value)
+        | _ -> None
+
+    let reduced_fails_at n test =
+      let rec aux i acc =
+        if i = 0 then
+          acc
         else
-          let x = Generator.generate test.gen in
-          if not (Property.check test.prop x) then Some x
-          else match Reduction.reduce test.red x test.prop with
-               | None -> loop (i + 1)
-               | Some y -> Some y
-      in loop 0
+          let value = Generator.next test.gen in
+          if test.prop value then aux (i-1) (acc @ [(value, None)])
+          else aux (i-1) (acc @ [(value, Some((Reduction.filter (fun x -> not (test.prop x)) test.red) value))])
+      in aux n [];;
 
     let execute n tests =
       List.map (fun test -> (test, fails_at n test)) tests
+
   end ;;
