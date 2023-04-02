@@ -38,4 +38,37 @@ module Test :
   end =
   struct
     (* TODO : Implémenter le type et tous les éléments de la signature *)
+    type 'a t = {
+      gen: 'a Generator.t;
+      red: 'a Reduction.t;
+      prop: 'a Property.t;
+    }
+
+    let make_test gen red prop = {
+      gen = gen;
+      red = red;
+      prop = prop;
+    }
+
+    let check n test =
+      let rec loop i =
+        if i = n then true
+        else
+          let x = Generator.generate test.gen in
+          Property.check test.prop x && loop (i + 1)
+      in n > 0 && loop 0
+
+    let fails_at n test =
+      let rec loop i =
+        if i = n then None
+        else
+          let x = Generator.generate test.gen in
+          if not (Property.check test.prop x) then Some x
+          else match Reduction.reduce test.red x test.prop with
+               | None -> loop (i + 1)
+               | Some y -> Some y
+      in loop 0
+
+    let execute n tests =
+      List.map (fun test -> (test, fails_at n test)) tests
   end ;;

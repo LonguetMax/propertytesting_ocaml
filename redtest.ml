@@ -1,4 +1,4 @@
-#use "modules/Reduction.ml"
+#use "Reduction.ml"
 
 
 let run_tests () =
