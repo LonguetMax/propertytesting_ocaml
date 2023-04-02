@@ -98,12 +98,4 @@ let run_test () =
     Printf.printf "filter %d: %d\n" i value
   done;
 
-  (* Test filter_map
-  let gen = Generator.filter_map (fun x -> if x mod 2 = 0 then Some x else None) (Generator.int 1 10) in
-  for i = 1 to 10 do
-    let value = Generator.next gen in
-    Printf.printf "filter_map %d: %d\n" i value
-  done; *)
-
-
 
